@@ -14,11 +14,10 @@ while not (default == "y" or default == "n"):
 	print "\nPlease enter either 'y' or 'n'"
 	default = raw_input('\n')
 
-if not in_coop:
-	COOP_dir = raw_input('\nEnter location of COOP:\n')
-	while not check_dir(COOP_dir):
-		print "\nERROR: No such directory. Try Again."
-		COOP_dir = raw_input('\n')
+COOP_dir = raw_input('\nEnter location of COOP:\n')
+while not check_dir(COOP_dir):
+	print "\nERROR: No such directory. Try Again."
+	COOP_dir = raw_input('\n')
 
 if default == "y":
 	if not check_dir(COOP_dir+'/maps'):
