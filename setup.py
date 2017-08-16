@@ -63,7 +63,7 @@ while not (ftcomp == 'gfortran' or ftcomp == 'ifort'):
 	ftcomp = raw_input('\n')
 
 settings = np.array([['COOP', COOP_dir], ['maps', map_dir], ['stacks', stack_dir], ['fortran', ftcomp]])
-np.savetxt('{}/settings.txt'.format(COOP_dir), settings, delimiter='\t', fmt='%s')
+np.savetxt('{}/settings.txt'.format(wd), settings, delimiter='\t', fmt='%s')
 
 print "\nSetup Complete! Settings have been stored in {}/settings.txt and can be edited at any time directly or by running this script again.".format(wd)
 
