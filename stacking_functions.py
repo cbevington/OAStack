@@ -188,6 +188,16 @@ def txt2bin_file_writer(fname, outdir, header, theta, phi, pix, peak_type, nu, m
 
 
 
+def deconvolve(A, B):
+	if A.shape != B.shape:
+		raise TypeError("A and B do not have the same shape.")
+	else:
+		A_fft = np.fft.fftshift(np.fft.fft2(A))
+		B_fft = np.fft.fftshift(np.fft.fft2(B))
+		return np.fft.fftshift(np.fft.ifft(np.fft.ifftshift(A_fft/B_fft)))
+
+	
+
 	
 	 
 	

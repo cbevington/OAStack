@@ -12,7 +12,7 @@ from stacking_functions import *
 try:
 	settings = np.loadtxt('settings.txt', dtype='str', delimiter='\t')
 except (IOError):
-	print "Cannot find OAStack/settings.txt. Either setup.py has not been run, or OAStack.py has been moved from where setup.py was run"
+	print "Cannot find OAStack/settings.txt. Either setup.py has not been run, or OAStack.py is not running from where setup.py was run"
 	sys.exit()
 COOP_dir	= settings[0,1]
 map_dir		= settings[1,1]
@@ -24,7 +24,9 @@ print "\nOAStack, an oriented asymmetric stacking manager for COOP. Select an op
 print "\t[1] Unoriented (random rotation) stacking"
 print "\t[2] Oriented stacking"
 print "\t[3] Oriented, symmetry breaking stacking"
-print "\t[4] Help"
+print "\t[4] Pre-processing (smoothing, I2TQTUT conversion)"
+print "\t[5] Post-processing (deconvolution)"
+print "\t[6] Help"
 print "\t[0] exit\n"
 case1 = raw_input()
 while not (case1 == "0" or case1 == "1" or case1 == "2" or case1 == "3" or case1 == "4"):
@@ -297,7 +299,7 @@ elif case1 == "1":
 			if mask_name:
 				print subprocess.check_output("{}/mapio/Stack -map {} -out {} -peaks {} -field T -mask {} -res {} -colortable 'jet'".format(COOP_dir, map_dir+'/'+map_name, stack_dir+'/out/'+fname, stack_dir+'/out/'+fname+'.dat', map_dir+'/'+mask_name, res), stderr=subprocess.STDOUT, shell=True)
 			else:
-				print subprocess.check_output("{}/mapio/Stack -map {} -out {} -peaks {} -field T -res {} -colortable 'jet'".format(COOP_dir, map_dir+'/'+map_name, stack_dir+'/out/'+fname, stack_dir+'/out/'+fname+'.dat'), stderr=subprocess.STDOUT, shell=True)
+				print subprocess.check_output("{}/mapio/Stack -map {} -out {} -peaks {} -field T -res {} -colortable 'jet'".format(COOP_dir, map_dir+'/'+map_name, stack_dir+'/out/'+fname, stack_dir+'/out/'+fname+'.dat', res), stderr=subprocess.STDOUT, shell=True)
 			print "\nGenerating PDF...\n"
 			print subprocess.check_output("{}/utils/pypl.py {}.txt {}.pdf".format(COOP_dir, stack_dir+'/out/'+fname, stack_dir+'/'+fname, res), stderr=subprocess.STDOUT, shell=True)
 
@@ -316,6 +318,23 @@ elif case1 == "1":
 			f.write("resolution:\t {}\n".format(res))
 			f.close()
 			print "Logfile available at {}.log".format(stack_dir+'/'+fname)
+
+			image = np.genfromtxt('{}/out/{}.txt'.format(stack_dir, fname), skip_header=17, skip_footer=18)
+			np.savez('{}/{}'.format(stack_dir, fname), image.T)
+			print "Array saved to {}.npz".format(stack_dir+'/'+fname)
+
+			print "\nView image? [y/n]\n"
+			view = raw_input()
+			while not (view == "y" or view == "n"):
+				print "\nPlease enter either 'y' or 'n'\n"
+				view = raw_input()
+
+			if view == 'y':
+				plt.imshow(image.T, cmap="jet", extent=[-2.5,2.5,-2.5,2.5])
+				plt.colorbar()
+				plt.show()
+
+
 
 		
 	# TODO: CO maps
@@ -524,6 +543,7 @@ elif case1 == "2":
 				print "\nPlease specify a value 0 < nu <= 10 or 0 for no threshold:\n"
 				nu = raw_input()
 
+
 			print "\nMap resolution in pixels: [10-200]\n"
 			res = raw_input()
 			while not (res >= 10 or nu <= 200):
@@ -532,12 +552,12 @@ elif case1 == "2":
 
 			print "\nStacking options:"
 			print "\tmap type:\t {}".format(map_type)
-			print "\torient:\t True"
+			print "\torient:\t\t True"
 			print "\tmap dir:\t {}".format(map_dir+'/'+map_name)
 			if mask_name:
 				print "\tmask dir:\t {}".format(mask_name)
 			else:
-				print "\tmask:\t None"
+				print "\tmask:\t\t None"
 			print "\tpeak type:\t {}".format(peak_type)
 			if nu > 0:
 				print "\tthreshold:\t {}".format(nu)
@@ -555,9 +575,9 @@ elif case1 == "2":
 				sys.exit()
 
 			if mask_name:
-				fname = "{}_stack_orient_{}_masked_{}_nu{}".format(map_type, map_name[:-5], peak_type, nu)
+				fname = "{}_stack_{}_masked_{}_nu{}_res{}".format(map_type, map_name[:-5], peak_type, nu, res)
 			else:
-				fname = "{}_stack_orient_{}_{}_nu{}".format(map_type, map_name[:-5], peak_type, nu)
+				fname = "{}_stack_{}_{}_nu{}_res{}".format(map_type, map_name[:-5], peak_type, nu, res)
 
 			print "\nProposed output filename: {}".format(fname)
 			print "Type 'y' to confirm or otherwise enter a custom filename:\n"
@@ -574,7 +594,7 @@ elif case1 == "2":
 			if mask_name:
 				print subprocess.check_output("{}/mapio/Stack -map {} -out {} -peaks {} -field T -mask {} -res {} -colortable 'jet'".format(COOP_dir, map_dir+'/'+map_name, stack_dir+'/out/'+fname, stack_dir+'/out/'+fname+'.dat', map_dir+'/'+mask_name, res), stderr=subprocess.STDOUT, shell=True)
 			else:
-				print subprocess.check_output("{}/mapio/Stack -map {} -out {} -peaks {} -field T -res {} -colortable 'jet'".format(COOP_dir, map_dir+'/'+map_name, stack_dir+'/out/'+fname, stack_dir+'/out/'+fname+'.dat'), stderr=subprocess.STDOUT, shell=True)
+				print subprocess.check_output("{}/mapio/Stack -map {} -out {} -peaks {} -field T -res {} -colortable 'jet'".format(COOP_dir, map_dir+'/'+map_name, stack_dir+'/out/'+fname, stack_dir+'/out/'+fname+'.dat', res), stderr=subprocess.STDOUT, shell=True)
 			print "\nGenerating PDF...\n"
 			print subprocess.check_output("{}/utils/pypl.py {}.txt {}.pdf".format(COOP_dir, stack_dir+'/out/'+fname, stack_dir+'/'+fname, res), stderr=subprocess.STDOUT, shell=True)
 
@@ -582,7 +602,7 @@ elif case1 == "2":
 
 			f = open(stack_dir+'/'+fname+'.log', 'w')
 			f.write("map type:\t {}\n".format(map_type))
-			f.write("orient: \t True")
+			f.write("orient:\t True")
 			f.write("map dir:\t {}\n".format(map_dir+'/'+map_name))
 			if mask_name:
 				f.write("mask dir:\t {}\n".format(mask_name))
@@ -593,6 +613,21 @@ elif case1 == "2":
 			f.write("resolution:\t {}\n".format(res))
 			f.close()
 			print "Logfile available at {}.log".format(stack_dir+'/'+fname)
+
+			image = np.genfromtxt('{}/out/{}.txt'.format(stack_dir, fname), skip_header=17, skip_footer=18)
+			np.savez('{}/{}'.format(stack_dir, fname), image.T)
+			print "Array saved to {}.npz".format(stack_dir+'/'+fname)
+
+			print "\nView image? [y/n]\n"
+			view = raw_input()
+			while not (view == "y" or view == "n"):
+				print "\nPlease enter either 'y' or 'n'\n"
+				view = raw_input()
+
+			if view == 'y':
+				plt.imshow(image.T, cmap="jet", extent=[-2.5,2.5,-2.5,2.5])
+				plt.colorbar()
+				plt.show()
 
 		
 	# TODO: CO maps
@@ -627,6 +662,115 @@ elif case1 == "3":
 		print "\nPlease select a valid option:\n"
 		case2 = raw_input()
 	"""
-# TODO: help documentation
+
+# Pre-processing
 elif case1 == "4":
+	print "\nSelect a pre-processing option:\n"
+	print "\t[1] smoothing"
+	print "\t[2] I to IQU map conversion"
+	print "\t[0] exit\n"
+	case2 = raw_input()
+	while not (case2 == "0" or case2 == "1" or case2 == "2"):
+		print "\nPlease select a valid option:\n"
+		case2 = raw_input()
+	
+	if case2 == "0":
+		sys.exit()
+
+	elif case2 == "1":
+		print "Maps are assumed to be in Healpix format. List of potential maps to smooth:\n"
+		print subprocess.check_output("cd {}; ls".format(map_dir), stderr=subprocess.STDOUT, shell=True)
+		print "Select a map to smooth, or change map locations by running setup.py:\n"
+		smooth_name = raw_input()
+		while not check_file(map_dir+'/'+smooth_name):
+			print "\nERROR: No such file. Try Again.\n"
+			smooth_name = raw_input()
+
+		count = 1
+		while smooth_name[-count] != '.':
+			count += 1
+		basename = smooth_name[:-count]
+		
+		print "\nLoading map...\n"
+		raw_map = hp.read_map(map_dir+'/'+smooth_name, verbose=False, field=None)
+
+		print "\nEnter FWHM in minutes:\n"
+		fwhm = float(raw_input())
+		print "\nSmoothing..."
+		smooth_map = hp.sphtfunc.smoothing(raw_map, fwhm=(fwhm/60.)*np.pi/180, verbose=False)
+		hp.write_map(map_dir+'/'+basename+'_smoothed.fits', smooth_map)
+
+		print "\nSmoothed map saved to {}".format(map_dir+'/'+basename+'_smoothed.fits')
+
+	elif case2 == "2":
+		print "Maps are assumed to be in Healpix format. List of potential maps to convert:\n"
+		print subprocess.check_output("cd {}; ls".format(map_dir), stderr=subprocess.STDOUT, shell=True)
+		print "Select a map to convert, or change map locations by running setup.py:\n"
+		conv_name = raw_input()
+		while not check_file(map_dir+'/'+conv_name):
+			print "\nERROR: No such file. Try Again.\n"
+			conv_name = raw_input()
+
+		count = 1
+		while conv_name[-count] != '.':
+			count += 1
+		basename = conv_name[:-count]
+
+		print "\nConverting...\n"
+		proc = subprocess.Popen("{}/mapio/MSMAP {} I2TQTUT".format(COOP_dir, map_dir+'/'+conv_name), stderr=subprocess.STDOUT, shell=True)
+		proc.wait()
+		print "\nConverted map saved to {}".format(map_dir+'/'+basename+'_conv_TQTUT.fits')
+
+
+# Post-processing
+elif case1 == "5":
+	print "\nDeconvolution of stack A with B is performed via IFFT(FFT(A)/FFT(B))."
+	time.sleep(2)
+	print "List of potential stacks:\n"
+	print subprocess.check_output("cd {}; ls *.npz".format(stack_dir), stderr=subprocess.STDOUT, shell=True)
+	print "Select map A, or change map locations by running setup.py:\n"
+	A = raw_input()
+	while not check_file(stack_dir+'/'+A):
+		print "\nERROR: No such file. Try Again.\n"
+		A = raw_input()
+
+	count = 1
+	while A[-count] != '.':
+		count += 1
+	basenameA = A[:-count]
+
+	print "Select map B, or change map locations by running setup.py:\n"
+	B = raw_input()
+	while not check_file(stack_dir+'/'+B):
+		print "\nERROR: No such file. Try Again.\n"
+		B = raw_input()
+
+	count = 1
+	while B[-count] != '.':
+		count += 1
+	basenameB = B[:-count]
+
+	a_stack = np.load('{}.npz'.format(stack_dir+'/'+A))
+	b_stack = np.load('{}.npz'.format(stack_dir+'/'+B))
+
+	deconv = deconvolve(a_stack.T, b_stack.T)
+	np.savez('{}/{}_deconv_{}'.format(stack_dir, basenameA, basenameB), deconv)
+	print "\nDeconvolved array saved to {}/{}_deconv_{}.npz".format(stack_dir, basenameA, basenameB)
+	print "\nView image? [y/n]\n"
+	view = raw_input()
+
+	view = raw_input()
+	while not (view == "y" or view == "n"):
+		print "\nPlease enter either 'y' or 'n'\n"
+		view = raw_input()
+
+	if view == 'y':
+		plt.imshow(np.log10(np.abs(deconv)), cmap="jet")
+		plt.colorbar()
+		plt.show()
+	
+		
+
+# TODO: help documentation
+elif case1 == "6":
 	print "\nUnder construction..."
