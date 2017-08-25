@@ -36,6 +36,7 @@ else:
 	while not check_dir(stack_dir):
 		print "\nERROR: No such directory. Try Again."
 		stack_dir = raw_input('\n')
+	_ = subprocess.Popen("mkdir {}/out".format(stack_dir), shell=True),
 
 print "\nRaw maps to be stored at {}".format(map_dir)
 print "Stacks to be stored at {}".format(stack_dir)

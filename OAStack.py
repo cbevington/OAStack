@@ -1,4 +1,5 @@
 import sys
+import time
 import subprocess
 import numpy as np
 import matplotlib.pyplot as plt
@@ -29,11 +30,11 @@ print "\t[5] Post-processing (deconvolution)"
 print "\t[6] Help"
 print "\t[0] exit\n"
 case1 = raw_input()
-while not (case1 == "0" or case1 == "1" or case1 == "2" or case1 == "3" or case1 == "4"):
+while not (case1 == "0" or case1 == "1" or case1 == "2" or case1 == "3" or case1 == "4" or case1 =="5" or case1 =="6"):
 	print "\nPlease select a valid option:\n"
 	case1 = raw_input()
 
-if case1 != "0":
+if case1 == "1" or case1 == "2" or case1 == "3":
 	print "\nEnter type of map (i.e. tSZ, CO, dust, etc):\n"
 	map_type = raw_input()
 
@@ -965,7 +966,7 @@ elif case1 == "2":
 			else:
 				print subprocess.check_output("{}/mapio/Stack -map {} -out {} -peaks {} -field T -res {} -colortable 'jet'".format(COOP_dir, map_dir+'/'+map_name, stack_dir+'/out/'+fname, stack_dir+'/out/'+fname+'.dat', res), stderr=subprocess.STDOUT, shell=True)
 			print "\nGenerating PDF...\n"
-			print subprocess.check_output("{}/utils/pypl.py {}.txt {}.pdf".format(COOP_dir, stack_dir+'/out/'+fname, stack_dir+'/'+fname, res), stderr=subprocess.STDOUT, shell=True)
+			print subprocess.check_output("{}/utils/pypl.py {}.txt {}.pdf".format(COOP_dir, stack_dir+'/out/'+fname, stack_dir+'/'+fname), stderr=subprocess.STDOUT, shell=True)
 
 			print "\nPDF available at {}.pdf".format(stack_dir+'/'+fname)
 
@@ -1425,7 +1426,7 @@ elif case1 == "4":
 elif case1 == "5":
 	print "\nDeconvolution of stack A with B is performed via IFFT(FFT(A)/FFT(B))."
 	time.sleep(2)
-	print "List of potential stacks:\n"
+	print "\nList of potential stacks:\n"
 	print subprocess.check_output("cd {}; ls *.npz".format(stack_dir), stderr=subprocess.STDOUT, shell=True)
 	print "Select map A, or change map locations by running setup.py:\n"
 	A = raw_input()
@@ -1438,7 +1439,7 @@ elif case1 == "5":
 		count += 1
 	basenameA = A[:-count]
 
-	print "Select map B, or change map locations by running setup.py:\n"
+	print "\nSelect map B, or change map locations by running setup.py:\n"
 	B = raw_input()
 	while not check_file(stack_dir+'/'+B):
 		print "\nERROR: No such file. Try Again.\n"
@@ -1449,22 +1450,27 @@ elif case1 == "5":
 		count += 1
 	basenameB = B[:-count]
 
-	a_stack = np.load('{}.npz'.format(stack_dir+'/'+A))
-	b_stack = np.load('{}.npz'.format(stack_dir+'/'+B))
-
+	a_stack = np.load('{}'.format(stack_dir+'/'+A))['arr_0']
+	b_stack = np.load('{}'.format(stack_dir+'/'+B))['arr_0']
 	deconv = deconvolve(a_stack.T, b_stack.T)
-	np.savez('{}/{}_deconv_{}'.format(stack_dir, basenameA, basenameB), deconv)
-	print "\nDeconvolved array saved to {}/{}_deconv_{}.npz".format(stack_dir, basenameA, basenameB)
-	print "\nView image? [y/n]\n"
-	view = raw_input()
+	fname = "{}_deconv_{}".format(basenameA, basenameB)
 
+	print "\nProposed output filename: {}".format(fname)
+	print "Type 'y' to confirm or otherwise enter a custom filename:\n"
+	new_fname = raw_input()
+	if new_fname != 'y':
+		fname = new_fname.strip()
+
+	np.savez('{}/{}'.format(stack_dir, fname), deconv)
+	print "\nDeconvolved array saved to {}/{}.npz".format(stack_dir, fname)
+	print "\nView image? [y/n]\n"
 	view = raw_input()
 	while not (view == "y" or view == "n"):
 		print "\nPlease enter either 'y' or 'n'\n"
 		view = raw_input()
 
 	if view == 'y':
-		plt.imshow(np.log10(np.abs(deconv)), cmap="jet")
+		plt.imshow(np.log10(np.abs(deconv)), extent=[-2.5,2.5,-2.5,2.5], cmap="jet")
 		plt.colorbar()
 		plt.show()
 	

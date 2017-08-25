@@ -194,7 +194,7 @@ def deconvolve(A, B):
 	else:
 		A_fft = np.fft.fftshift(np.fft.fft2(A))
 		B_fft = np.fft.fftshift(np.fft.fft2(B))
-		return np.fft.fftshift(np.fft.ifft(np.fft.ifftshift(A_fft/B_fft)))
+		return np.fft.ifft(np.fft.ifftshift(A_fft/B_fft))
 
 	
 
